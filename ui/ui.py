@@ -1,60 +1,69 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import messagebox
 
-class FinanceTrackerUI:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Finance Tracker")
+class FinanceTrackerApp(ctk.CTk):
+    def __init__(self):
+        super().__init__()
 
-        # Labels and Entry fields
-        tk.Label(root, text="Description:").grid(row=0, column=0, padx=10, pady=5)
-        self.description_entry = tk.Entry(root, width=30)
-        self.description_entry.grid(row=0, column=1, padx=10, pady=5)
+        self.title("💸 Finance Tracker")
+        self.geometry("480x500")
+        ctk.set_appearance_mode("light")
+        ctk.set_default_color_theme("blue")
 
-        tk.Label(root, text="Amount:").grid(row=1, column=0, padx=10, pady=5)
-        self.amount_entry = tk.Entry(root, width=30)
-        self.amount_entry.grid(row=1, column=1, padx=10, pady=5)
-
-        # Buttons
-        self.add_button = tk.Button(root, text="Add Transaction", command=self.add_transaction)
-        self.add_button.grid(row=2, column=0, columnspan=2, pady=10)
-
-        self.view_button = tk.Button(root, text="View Transactions", command=self.view_transactions)
-        self.view_button.grid(row=3, column=0, columnspan=2, pady=10)
-
-        # Transaction list
         self.transactions = []
 
+        # === Heading ===
+        self.heading = ctk.CTkLabel(self, text="Finance Tracker", font=ctk.CTkFont(size=24, weight="bold"))
+        self.heading.pack(pady=(20, 10))
+
+        # === Entry Frame ===
+        entry_frame = ctk.CTkFrame(self)
+        entry_frame.pack(pady=10, padx=20, fill="x")
+
+        self.description_entry = ctk.CTkEntry(entry_frame, placeholder_text="Description")
+        self.description_entry.pack(pady=10, padx=20, fill="x")
+
+        self.amount_entry = ctk.CTkEntry(entry_frame, placeholder_text="Amount ($)")
+        self.amount_entry.pack(pady=(0, 10), padx=20, fill="x")
+
+        self.add_button = ctk.CTkButton(entry_frame, text="Add Transaction", command=self.add_transaction)
+        self.add_button.pack(pady=(0, 15), padx=20)
+
+        # === Transactions Frame ===
+        transactions_frame = ctk.CTkFrame(self)
+        transactions_frame.pack(pady=10, padx=20, fill="both", expand=True)
+
+        self.transactions_box = ctk.CTkTextbox(transactions_frame, height=250)
+        self.transactions_box.pack(padx=20, pady=10, fill="both", expand=True)
+        self.transactions_box.configure(state="disabled")
+
     def add_transaction(self):
-        description = self.description_entry.get()
-        amount = self.amount_entry.get()
+        description = self.description_entry.get().strip()
+        amount = self.amount_entry.get().strip()
 
         if not description or not amount:
-            messagebox.showerror("Error", "Please fill in all fields.")
+            messagebox.showerror("Input Error", "Please fill in both fields.")
             return
 
         try:
             amount = float(amount)
         except ValueError:
-            messagebox.showerror("Error", "Amount must be a number.")
+            messagebox.showerror("Input Error", "Amount must be a number.")
             return
 
         self.transactions.append({"description": description, "amount": amount})
-        messagebox.showinfo("Success", "Transaction added successfully!")
-        self.description_entry.delete(0, tk.END)
-        self.amount_entry.delete(0, tk.END)
+        self.update_transactions_display()
 
-    def view_transactions(self):
-        if not self.transactions:
-            messagebox.showinfo("Transactions", "No transactions to display.")
-            return
+        self.description_entry.delete(0, 'end')
+        self.amount_entry.delete(0, 'end')
 
-        transactions_str = "\n".join(
-            [f"{t['description']}: ${t['amount']:.2f}" for t in self.transactions]
-        )
-        messagebox.showinfo("Transactions", transactions_str)
+    def update_transactions_display(self):
+        self.transactions_box.configure(state="normal")
+        self.transactions_box.delete("1.0", "end")
+        for t in self.transactions:
+            self.transactions_box.insert("end", f"{t['description']}: ${t['amount']:.2f}\n")
+        self.transactions_box.configure(state="disabled")
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = FinanceTrackerUI(root)
-    root.mainloop()
+    app = FinanceTrackerApp()
+    app.mainloop()
